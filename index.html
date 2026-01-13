@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetroMax</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="text-gray-800 antialiased h-screen flex overflow-hidden">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-slate-900 text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-30 flex flex-col shadow-xl">
+        <div class="p-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="items-center">
+                   <img src="assets/logo.png" alt="" srcset=""> 
+                </div>
+               
+            </div>
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a href="#" onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg bg-indigo-600 text-white transition-colors">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+            <a href="#" onclick="switchView('calls')" id="nav-calls" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <i data-lucide="list-video" class="w-5 h-5"></i>
+                <span class="font-medium">All Calls</span>
+                <span id="navCallCount" class="ml-auto bg-slate-700 text-xs py-0.5 px-2 rounded-full">0</span>
+            </a>
+            <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="font-medium">Customers</span>
+            </a>
+            <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                <span class="font-medium">Analytics</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800">
+            <div class="flex items-center gap-3 px-4 py-2">
+                <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
+                    RM
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-white">Rajat Mishra</p>
+                    <p class="text-xs text-slate-400">Admin</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 lg:px-8 z-10">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <h2 id="pageTitle" class="text-xl font-semibold text-gray-800">Dashboard</h2>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button class="p-2 text-gray-500 hover:bg-gray-100 rounded-full relative">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                </button>
+                <button onclick="openModal()" class="hidden sm:flex bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium items-center gap-2 transition-all shadow-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Log New Call</span>
+                </button>
+                <!-- Mobile Add Button (FAB) -->
+                <button onclick="openModal()" class="sm:hidden fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg z-50">
+                    <i data-lucide="plus" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div id="contentArea" class="flex-1 overflow-y-auto p-4 lg:p-8 relative">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="space-y-6 fade-in">
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Total Calls</p>
+                                <h3 class="text-2xl font-bold text-gray-900 mt-1" id="statTotal">0</h3>
+                            </div>
+                            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <i data-lucide="phone" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-green-600 flex items-center font-medium">
+                                <i data-lucide="trending-up" class="w-3 h-3 mr-1"></i> 12%
+                            </span>
+                            <span class="text-gray-400 ml-2">vs last week</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Pending</p>
+                                <h3 class="text-2xl font-bold text-gray-900 mt-1" id="statPending">0</h3>
+                            </div>
+                            <div class="p-2 bg-yellow-50 text-yellow-600 rounded-lg">
+                                <i data-lucide="clock" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-yellow-600 font-medium">Requires Action</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Resolved</p>
+                                <h3 class="text-2xl font-bold text-gray-900 mt-1" id="statResolved">0</h3>
+                            </div>
+                            <div class="p-2 bg-green-50 text-green-600 rounded-lg">
+                                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-gray-500" id="statResolvedRate">0% success rate</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">High Priority</p>
+                                <h3 class="text-2xl font-bold text-gray-900 mt-1" id="statHighPriority">0</h3>
+                            </div>
+                            <div class="p-2 bg-red-50 text-red-600 rounded-lg">
+                                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-red-500 font-medium">Attention needed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Chart Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                            <h3 class="text-lg font-bold text-gray-800">Call Volume Overview</h3>
+                            <div class="flex bg-gray-100 p-1 rounded-lg self-start sm:self-auto">
+                                <button onclick="updateChart('daily')" class="chart-toggle px-3 py-1 text-sm font-medium rounded-md bg-white text-gray-800 shadow-sm transition-all" data-period="daily">Daily</button>
+                                <button onclick="updateChart('weekly')" class="chart-toggle px-3 py-1 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 transition-all" data-period="weekly">Weekly</button>
+                                <button onclick="updateChart('monthly')" class="chart-toggle px-3 py-1 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900 transition-all" data-period="monthly">Monthly</button>
+                            </div>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Feed -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
+                        <div class="flex-1 overflow-y-auto pr-2 space-y-4 max-h-[300px]" id="activityFeed">
+                            <!-- Injected via JS -->
+                        </div>
+                        <button onclick="switchView('calls')" class="w-full mt-4 py-2 text-sm text-indigo-600 font-medium hover:bg-indigo-50 rounded-lg transition-colors">
+                            View All Activity
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: CALL LIST -->
+            <div id="view-calls" class="space-y-6 hidden fade-in">
+                <!-- Filters Bar -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
+                    <div class="relative w-full md:w-96">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                        <input type="text" id="searchInput" placeholder="Search by name or number..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    
+                    <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                        <select id="filterStatus" class="px-4 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="All">All Statuses</option>
+                            <option value="New">New</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                        </select>
+                        <select id="filterPriority" class="px-4 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="All">All Priorities</option>
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold">
+                                    <th class="px-6 py-4">Caller</th>
+                                    <th class="px-6 py-4">Type</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4">Priority</th>
+                                    <th class="px-6 py-4">Time</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="callsTableBody" class="divide-y divide-gray-100">
+                                <!-- Rows injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden flex flex-col items-center justify-center py-12 text-center">
+                        <div class="bg-gray-100 p-4 rounded-full mb-3">
+                            <i data-lucide="search-x" class="w-8 h-8 text-gray-400"></i>
+                        </div>
+                        <h3 class="text-gray-900 font-medium text-lg">No calls found</h3>
+                        <p class="text-gray-500 text-sm mt-1">Try adjusting your filters or search query.</p>
+                    </div>
+                    
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center text-sm text-gray-500">
+                        <span id="showingCount">Showing 0 results</span>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1 border border-gray-300 rounded hover:bg-white disabled:opacity-50" disabled>Prev</button>
+                            <button class="px-3 py-1 border border-gray-300 rounded hover:bg-white disabled:opacity-50" disabled>Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Form -->
+    <div id="callModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeModal()"></div>
+        
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg modal-enter">
+                    
+                    <!-- Modal Header -->
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold leading-6 text-gray-900" id="modalTitle">Log New Call</h3>
+                            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500 transition-colors">
+                                <i data-lucide="x" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500">Fill in the details below to track this interaction.</p>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <form id="callForm" onsubmit="handleFormSubmit(event)" class="px-4 py-5 sm:p-6 space-y-4">
+                        <input type="hidden" id="callId">
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2 sm:col-span-1">
+                                <label for="callerName" class="block text-sm font-medium text-gray-700 mb-1">Caller Name</label>
+                                <input type="text" id="callerName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none" placeholder="e.g. Rahul Sharma">
+                            </div>
+                            
+                            <div class="col-span-2 sm:col-span-1">
+                                <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input type="tel" id="phoneNumber" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none" placeholder="+91 98765 43210">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="callType" class="block text-sm font-medium text-gray-700 mb-1">Call Type</label>
+                                <select id="callType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white">
+                                    <option value="Inquiry">General Inquiry</option>
+                                    <option value="Complaint">Complaint</option>
+                                    <option value="Sales">Installation</option>
+                                    <option value="Support">Support</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                <select id="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white">
+                                    <option value="Low">Low</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="High">High</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <div class="flex gap-2">
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="status" value="New" class="peer sr-only" checked>
+                                    <div class="text-center py-2 rounded-lg border border-gray-200 text-gray-600 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 transition-all text-sm font-medium">New</div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="status" value="In Progress" class="peer sr-only">
+                                    <div class="text-center py-2 rounded-lg border border-gray-200 text-gray-600 peer-checked:bg-yellow-50 peer-checked:border-yellow-500 peer-checked:text-yellow-700 transition-all text-sm font-medium">In Progress</div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="status" value="Resolved" class="peer sr-only">
+                                    <div class="text-center py-2 rounded-lg border border-gray-200 text-gray-600 peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-700 transition-all text-sm font-medium">Resolved</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <textarea id="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-shadow outline-none resize-none" placeholder="Add details about the conversation..."></textarea>
+                        </div>
+                    </form>
+
+                    <!-- Modal Footer -->
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" onclick="document.getElementById('callForm').dispatchEvent(new Event('submit'))" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto transition-colors">Save Call</button>
+                        <button type="button" onclick="closeModal()" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+        <i data-lucide="check-circle" class="text-green-400 w-5 h-5"></i>
+        <span id="toastMessage">Operation successful</span>
+    </div>
+<script src="script.js"></script>
+  
+</body>
+</html>
